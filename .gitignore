@@ -5,48 +5,48 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-.Python
 *.so
+.Python
 
 # Virtual environment
-venv/
-env/
-ENV/
+backend/venv/
+backend/env/
 
 # Django
 *.log
 *.pot
-db.sqlite3
-media/
-staticfiles/
-static/
+backend/db.sqlite3
+backend/media/
+backend/staticfiles/
+backend/static/
 
-# Environment variables — NEVER push this to GitHub
+# Environment variables
+backend/.env
 .env
 .env.local
 .env.production
 
-# Django migrations (optional — remove these lines if you want to push migrations)
-# backend/accounts/migrations/
-# backend/appointments/migrations/
-
 # ===========================
 # NODE / REACT
 # ===========================
-node_modules/
+frontend/node_modules/
+frontend/build/
+frontend/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-build/
-dist/
-.pnp
-.pnp.js
 
 # React env files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# ===========================
+# GIT
+# ===========================
+frontend/.git/
+frontend/.gitignore
 
 # ===========================
 # EDITORS AND OS
