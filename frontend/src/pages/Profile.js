@@ -99,20 +99,23 @@ export default function Profile() {
           display: 'flex', alignItems: 'center', gap: 24
         }}>
           {/* Avatar */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <div style={{
-              width: 88, height: 88, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 32, color: 'white', overflow: 'hidden',
-              border: '4px solid white', boxShadow: '0 4px 16px rgba(14,165,233,0.3)'
-            }}>
-              {preview
-                ? <img src={preview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : user?.profile_picture
-                  ? <img src={`${process.env.REACT_APP_API_URL?.replace('/api','') || `https://healthcare-backend-hzbg.onrender.com${user.profile_picture}`}} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : user?.first_name?.[0]?.toUpperCase() || '👤'}
-            </div>
+          <div style={{
+  width: 88, height: 88, borderRadius: '50%',
+  background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  fontSize: 32, color: 'white', overflow: 'hidden',
+  border: '4px solid white', boxShadow: '0 4px 16px rgba(14,165,233,0.3)'
+}}>
+  {preview
+    ? <img src={preview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    : user?.profile_picture
+      ? <img
+          src={'https://healthcare-backend-hzbg.onrender.com' + user.profile_picture}
+          alt="profile"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      : user?.first_name?.[0]?.toUpperCase() || '👤'}
+</div>
             <label style={{
               position: 'absolute', bottom: 0, right: 0,
               width: 28, height: 28, borderRadius: '50%',
