@@ -110,7 +110,7 @@ export default function Profile() {
               {preview
                 ? <img src={preview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : user?.profile_picture
-                  ? <img src={`http://localhost:8000${user.profile_picture}`} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ? <img src={`${process.env.REACT_APP_API_URL?.replace('/api','') || `https://healthcare-backend-hzbg.onrender.com${user.profile_picture}`}} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : user?.first_name?.[0]?.toUpperCase() || '👤'}
             </div>
             <label style={{

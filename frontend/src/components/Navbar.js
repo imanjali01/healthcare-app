@@ -69,7 +69,7 @@ export default function Navbar() {
               color: 'white', fontWeight: 700, fontSize: 14, flexShrink: 0
             }}>
               {user?.profile_picture
-                ? <img src={`http://localhost:8000${user.profile_picture}`} alt="avatar"
+                ? <img src={`${process.env.REACT_APP_API_URL?.replace('/api','') || `https://healthcare-backend-hzbg.onrender.com${user.profile_picture}`} alt="avatar"
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : user?.first_name?.[0]?.toUpperCase() || 'U'}
             </div>

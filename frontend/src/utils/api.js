@@ -1,15 +1,15 @@
 import axios from 'axios';
 
-const API = axios.create({ baseURL: 'http://localhost:8000/api' });
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://healthcare-backend-hzbg.onrender.com/api';
 
-// Attach JWT token to every request automatically
+const API = axios.create({ baseURL: BASE_URL });
+
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// If token expired, try to refresh it
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -18,7 +18,7 @@ API.interceptors.response.use(
       original._retry = true;
       try {
         const refresh = localStorage.getItem('refresh_token');
-        const res = await axios.post('http://localhost:8000/api/auth/token/refresh/', { refresh });
+        const res = await axios.post(`${BASE_URL}/auth/token/refresh/`, { refresh });
         localStorage.setItem('access_token', res.data.access);
         return API(original);
       } catch {
