@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import API from '../utils/api';
 import toast from 'react-hot-toast';
 
+const BACKEND_URL = 'https://healthcare-backend-hzbg.onrender.com';
+
 export default function Profile() {
   const { user, fetchProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('personal');
@@ -44,7 +46,10 @@ export default function Profile() {
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
-    if (file) { setPhoto(file); setPreview(URL.createObjectURL(file)); }
+    if (file) {
+      setPhoto(file);
+      setPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -52,15 +57,20 @@ export default function Profile() {
     setLoading(true);
     try {
       const formData = new FormData();
-      Object.entries(form).forEach(([key, val]) => { if (val) formData.append(key, val); });
+      Object.entries(form).forEach(([key, val]) => {
+        if (val) formData.append(key, val);
+      });
       if (photo) formData.append('profile_picture', photo);
       await API.patch('/auth/profile/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       await fetchProfile();
       toast.success('Profile updated!');
-    } catch { toast.error('Failed to update.'); }
-    finally { setLoading(false); }
+    } catch {
+      toast.error('Failed to update.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inp = {
@@ -77,6 +87,12 @@ export default function Profile() {
   const tabs = user?.role === 'doctor'
     ? [{ id: 'personal', label: '👤 Personal' }, { id: 'doctor', label: '🏥 Doctor Settings' }]
     : [{ id: 'personal', label: '👤 Personal' }];
+
+  const getAvatarSrc = () => {
+    if (preview) return preview;
+    if (user?.profile_picture) return BACKEND_URL + user.profile_picture;
+    return null;
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#f0f4f8' }}>
@@ -98,24 +114,20 @@ export default function Profile() {
           boxShadow: '0 8px 32px rgba(0,0,0,0.1)', marginBottom: 20,
           display: 'flex', alignItems: 'center', gap: 24
         }}>
-          {/* Avatar */}
-          <div style={{
-  width: 88, height: 88, borderRadius: '50%',
-  background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  fontSize: 32, color: 'white', overflow: 'hidden',
-  border: '4px solid white', boxShadow: '0 4px 16px rgba(14,165,233,0.3)'
-}}>
-  {preview
-    ? <img src={preview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-    : user?.profile_picture
-      ? <img
-          src={'https://healthcare-backend-hzbg.onrender.com' + user.profile_picture}
-          alt="profile"
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
-      : user?.first_name?.[0]?.toUpperCase() || '👤'}
-</div>
+
+          {/* Avatar with upload button */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <div style={{
+              width: 88, height: 88, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 32, color: 'white', overflow: 'hidden',
+              border: '4px solid white', boxShadow: '0 4px 16px rgba(14,165,233,0.3)'
+            }}>
+              {getAvatarSrc()
+                ? <img src={getAvatarSrc()} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : user?.first_name ? user.first_name[0].toUpperCase() : '👤'}
+            </div>
             <label style={{
               position: 'absolute', bottom: 0, right: 0,
               width: 28, height: 28, borderRadius: '50%',
@@ -131,7 +143,7 @@ export default function Profile() {
           {/* Name and role */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>
-              {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.username}
+              {user?.first_name ? user.first_name + ' ' + user.last_name : user?.username}
             </div>
             <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{user?.email}</div>
             <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -170,7 +182,11 @@ export default function Profile() {
 
         {/* Tabs */}
         {user?.role === 'doctor' && (
-          <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'white', borderRadius: 10, padding: 4, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+          <div style={{
+            display: 'flex', gap: 4, marginBottom: 16,
+            background: 'white', borderRadius: 10, padding: 4,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+          }}>
             {tabs.map(tab => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
                 flex: 1, padding: '10px', borderRadius: 8, border: 'none',
@@ -190,44 +206,49 @@ export default function Profile() {
               background: 'white', borderRadius: 14, padding: 28,
               boxShadow: '0 4px 16px rgba(0,0,0,0.07)', marginBottom: 20
             }}>
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: '#0f172a', marginBottom: 24, paddingBottom: 12, borderBottom: '1px solid #f1f5f9' }}>
+              <h2 style={{
+                fontSize: 16, fontWeight: 600, color: '#0f172a',
+                marginBottom: 24, paddingBottom: 12, borderBottom: '1px solid #f1f5f9'
+              }}>
                 Personal Information
               </h2>
 
-              {/* Row 1 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
                 <div style={grp}>
                   <label style={lbl}>First Name</label>
                   <input style={inp} placeholder="John"
-                    value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} />
+                    value={form.first_name}
+                    onChange={e => setForm({ ...form, first_name: e.target.value })} />
                 </div>
                 <div style={grp}>
                   <label style={lbl}>Last Name</label>
                   <input style={inp} placeholder="Doe"
-                    value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} />
+                    value={form.last_name}
+                    onChange={e => setForm({ ...form, last_name: e.target.value })} />
                 </div>
               </div>
 
-              {/* Row 2 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
                 <div style={grp}>
                   <label style={lbl}>Email Address</label>
                   <input style={inp} type="email" placeholder="john@email.com"
-                    value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                    value={form.email}
+                    onChange={e => setForm({ ...form, email: e.target.value })} />
                 </div>
                 <div style={grp}>
                   <label style={lbl}>Phone Number</label>
                   <input style={inp} placeholder="+91 98765 43210"
-                    value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                    value={form.phone}
+                    onChange={e => setForm({ ...form, phone: e.target.value })} />
                 </div>
               </div>
 
-              {/* Row 3 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
                 <div style={grp}>
                   <label style={lbl}>Date of Birth</label>
                   <input style={inp} type="date"
-                    value={form.date_of_birth} onChange={e => setForm({ ...form, date_of_birth: e.target.value })} />
+                    value={form.date_of_birth}
+                    onChange={e => setForm({ ...form, date_of_birth: e.target.value })} />
                 </div>
                 <div style={grp}>
                   <label style={lbl}>Blood Group</label>
@@ -241,17 +262,18 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* Row 4 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
                 <div style={grp}>
                   <label style={lbl}>Emergency Contact</label>
                   <input style={inp} placeholder="+91 98765 43210"
-                    value={form.emergency_contact} onChange={e => setForm({ ...form, emergency_contact: e.target.value })} />
+                    value={form.emergency_contact}
+                    onChange={e => setForm({ ...form, emergency_contact: e.target.value })} />
                 </div>
                 <div style={grp}>
                   <label style={lbl}>Address</label>
                   <input style={inp} placeholder="Your address"
-                    value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} />
+                    value={form.address}
+                    onChange={e => setForm({ ...form, address: e.target.value })} />
                 </div>
               </div>
             </div>
@@ -263,19 +285,29 @@ export default function Profile() {
               background: 'white', borderRadius: 14, padding: 28,
               boxShadow: '0 4px 16px rgba(0,0,0,0.07)', marginBottom: 20
             }}>
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: '#0f172a', marginBottom: 24, paddingBottom: 12, borderBottom: '1px solid #f1f5f9' }}>
-                Doctor Settings & Availability
+              <h2 style={{
+                fontSize: 16, fontWeight: 600, color: '#0f172a',
+                marginBottom: 24, paddingBottom: 12, borderBottom: '1px solid #f1f5f9'
+              }}>
+                Doctor Settings and Availability
               </h2>
 
-              {/* Row 1 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
                 <div style={grp}>
                   <label style={lbl}>Specialization</label>
                   <select style={inp} value={doctorForm.specialization}
                     onChange={e => setDoctorForm({ ...doctorForm, specialization: e.target.value })}>
-                    {[['general','General Physician'],['cardiology','Cardiology'],['dermatology','Dermatology'],
-                      ['neurology','Neurology'],['orthopedics','Orthopedics'],['pediatrics','Pediatrics'],['psychiatry','Psychiatry']
-                    ].map(([val, label]) => <option key={val} value={val}>{label}</option>)}
+                    {[
+                      ['general', 'General Physician'],
+                      ['cardiology', 'Cardiology'],
+                      ['dermatology', 'Dermatology'],
+                      ['neurology', 'Neurology'],
+                      ['orthopedics', 'Orthopedics'],
+                      ['pediatrics', 'Pediatrics'],
+                      ['psychiatry', 'Psychiatry']
+                    ].map(([val, label]) => (
+                      <option key={val} value={val}>{label}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={grp}>
@@ -286,10 +318,9 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* Row 2 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
                 <div style={grp}>
-                  <label style={lbl}>Consultation Fee (₹)</label>
+                  <label style={lbl}>Consultation Fee</label>
                   <input style={inp} type="number" min="0"
                     value={doctorForm.consultation_fee}
                     onChange={e => setDoctorForm({ ...doctorForm, consultation_fee: e.target.value })} />
@@ -298,13 +329,12 @@ export default function Profile() {
                   <label style={lbl}>Currently Accepting Patients</label>
                   <select style={inp} value={String(doctorForm.is_available)}
                     onChange={e => setDoctorForm({ ...doctorForm, is_available: e.target.value === 'true' })}>
-                    <option value="true">✅ Yes, available</option>
-                    <option value="false">❌ Not available</option>
+                    <option value="true">Yes, available</option>
+                    <option value="false">Not available</option>
                   </select>
                 </div>
               </div>
 
-              {/* Row 3 — time */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
                 <div style={grp}>
                   <label style={lbl}>Available From</label>
@@ -320,29 +350,29 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* Available days */}
               <div style={grp}>
                 <label style={lbl}>Available Days</label>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
                   {DAYS.map(day => (
                     <button key={day} type="button" onClick={() => toggleDay(day)} style={{
                       padding: '8px 16px', borderRadius: 8,
-                      border: `1.5px solid ${selectedDays.includes(day) ? '#0ea5e9' : '#e2e8f0'}`,
+                      border: '1.5px solid ' + (selectedDays.includes(day) ? '#0ea5e9' : '#e2e8f0'),
                       background: selectedDays.includes(day) ? '#e0f2fe' : 'white',
                       color: selectedDays.includes(day) ? '#0284c7' : '#64748b',
-                      fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s'
+                      fontSize: 13, fontWeight: 500, cursor: 'pointer'
                     }}>{day.slice(0, 3)}</button>
                   ))}
                 </div>
               </div>
 
-              {/* Bio */}
               <div style={grp}>
                 <label style={lbl}>Professional Bio</label>
-                <textarea style={{ ...inp, height: 100, resize: 'vertical' }}
-                  placeholder="Tell patients about your experience, approach to care..."
+                <textarea
+                  style={{ ...inp, height: 100, resize: 'vertical' }}
+                  placeholder="Tell patients about your experience..."
                   value={doctorForm.bio}
-                  onChange={e => setDoctorForm({ ...doctorForm, bio: e.target.value })} />
+                  onChange={e => setDoctorForm({ ...doctorForm, bio: e.target.value })}
+                />
               </div>
             </div>
           )}
@@ -353,12 +383,14 @@ export default function Profile() {
               padding: '12px 32px',
               background: loading ? '#94a3b8' : 'linear-gradient(135deg, #0ea5e9, #06b6d4)',
               color: 'white', border: 'none', borderRadius: 8,
-              fontSize: 15, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+              fontSize: 15, fontWeight: 600,
+              cursor: loading ? 'not-allowed' : 'pointer',
               boxShadow: '0 4px 12px rgba(14,165,233,0.3)'
             }}>
-              {loading ? 'Saving...' : '💾 Save Changes'}
+              {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
+
         </form>
       </div>
     </div>

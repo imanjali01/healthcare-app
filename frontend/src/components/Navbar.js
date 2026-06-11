@@ -32,13 +32,10 @@ export default function Navbar() {
 
       {/* Center nav links */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-
-        {/* Always visible */}
         <NavLink to="/" active={isActive('/')}>Home</NavLink>
         <NavLink to="/about" active={isActive('/about')}>About</NavLink>
         <NavLink to="/contact" active={isActive('/contact')}>Contact</NavLink>
 
-        {/* Only when logged in */}
         {user && (
           <>
             <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.35)', margin: '0 6px' }} />
@@ -59,22 +56,25 @@ export default function Navbar() {
       </div>
 
       {/* Right side */}
-      <div style={{
-  width: 34, height: 34, borderRadius: '50%',
-  background: 'rgba(255,255,255,0.25)', overflow: 'hidden',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  color: 'white', fontWeight: 700, fontSize: 14, flexShrink: 0
-}}>
-  {user?.profile_picture
-    ? <img
-        src={'https://healthcare-backend-hzbg.onrender.com' + user.profile_picture}
-        alt="avatar"
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-      />
-    : user?.first_name?.[0]?.toUpperCase() || 'U'}
-</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        {user ? (
+          <>
+            <div style={{
+              width: 34, height: 34, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.25)', overflow: 'hidden',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', fontWeight: 700, fontSize: 14, flexShrink: 0
+            }}>
+              {user.profile_picture
+                ? <img
+                    src={'https://healthcare-backend-hzbg.onrender.com' + user.profile_picture}
+                    alt="avatar"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                : user.first_name ? user.first_name[0].toUpperCase() : 'U'}
+            </div>
             <span style={{ color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: 500 }}>
-              {user?.first_name || user?.username}
+              {user.first_name || user.username}
             </span>
             <button onClick={handleLogout} style={{
               background: 'rgba(255,255,255,0.15)',
