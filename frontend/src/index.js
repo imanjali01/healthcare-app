@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { keepBackendAlive } from './utils/keepAlive';
+
+// Start pinging backend to keep it awake
+keepBackendAlive();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

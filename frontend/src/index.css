@@ -70,3 +70,7 @@ input:focus, select:focus, textarea:focus {
 }
 label { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; display: block; }
 .form-group { margin-bottom: 16px; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

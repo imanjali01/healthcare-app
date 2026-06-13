@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import API from '../utils/api';
@@ -7,13 +7,28 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const fetchData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    else setRefreshing(true);
+    try {
+      const res = await API.get('/appointments/');
+      setAppointments(res.data);
+      setLastUpdated(new Date());
+    } catch {}
+    finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    API.get('/appointments/')
-      .then(res => setAppointments(res.data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+    fetchData();
+    const interval = setInterval(() => fetchData(true), 20000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   const counts = {
     total: appointments.length,
@@ -38,24 +53,56 @@ export default function Dashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f0f4f8' }}>
+
       {/* Hero banner */}
       <div style={{
         background: 'linear-gradient(135deg, #0ea5e9, #06b6d4, #10b981)',
         padding: '40px 40px 60px', color: 'white'
       }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 6 }}>
-          Good day, {user?.first_name || user?.username}! 👋
-        </h1>
-        <p style={{ opacity: 0.88, fontSize: 15 }}>
-          {user?.role === 'doctor'
-            ? 'Manage your appointments and help your patients.'
-            : 'Welcome to your health dashboard. Stay on top of your appointments.'}
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 6 }}>
+              Good day, {user?.first_name || user?.username}! 👋
+            </h1>
+            <p style={{ opacity: 0.88, fontSize: 15 }}>
+              {user?.role === 'doctor'
+                ? 'Manage your appointments and help your patients.'
+                : 'Welcome to your health dashboard.'}
+            </p>
+            {lastUpdated && (
+              <p style={{ opacity: 0.7, fontSize: 12, marginTop: 6 }}>
+                Last updated: {lastUpdated.toLocaleTimeString()} · Auto-refreshes every 20 seconds
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => fetchData(true)}
+            disabled={refreshing}
+            style={{
+              padding: '8px 16px',
+              background: 'rgba(255,255,255,0.2)',
+              border: '1.5px solid rgba(255,255,255,0.4)',
+              color: 'white', borderRadius: 8,
+              fontSize: 13, fontWeight: 500, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6
+            }}
+          >
+            <span style={{
+              display: 'inline-block',
+              animation: refreshing ? 'spin 0.8s linear infinite' : 'none'
+            }}>🔄</span>
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       <div style={{ padding: '0 40px', marginTop: -28 }}>
+
         {/* Stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 16, marginBottom: 32
+        }}>
           {statCards.map((s) => (
             <div key={s.label} style={{
               background: 'white', borderRadius: 14, padding: '20px 24px',
@@ -63,23 +110,54 @@ export default function Dashboard() {
               borderTop: `4px solid ${s.color}`
             }}>
               <div style={{ fontSize: 28, marginBottom: 8 }}>{s.emoji}</div>
-              <div style={{ fontSize: 32, fontWeight: 700, color: s.color }}>{loading ? '—' : s.value}</div>
+              <div style={{ fontSize: 32, fontWeight: 700, color: s.color }}>
+                {loading ? (
+                  <span style={{
+                    display: 'inline-block', width: 40, height: 32,
+                    background: '#f1f5f9', borderRadius: 6,
+                    animation: 'pulse 1.5s ease-in-out infinite'
+                  }} />
+                ) : s.value}
+              </div>
               <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{s.label}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24, paddingBottom: 40 }}>
+        <div style={{
+          display: 'grid', gridTemplateColumns: '2fr 1fr',
+          gap: 24, paddingBottom: 40
+        }}>
+
           {/* Recent appointments */}
-          <div style={{ background: 'white', borderRadius: 14, padding: 24, boxShadow: '0 4px 12px rgba(0,0,0,0.07)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 17, fontWeight: 600, color: '#0f172a' }}>Recent Appointments</h2>
-              <Link to="/appointments" style={{ fontSize: 13, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
+          <div style={{
+            background: 'white', borderRadius: 14, padding: 24,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.07)'
+          }}>
+            <div style={{
+              display: 'flex', justifyContent: 'space-between',
+              alignItems: 'center', marginBottom: 20
+            }}>
+              <h2 style={{ fontSize: 17, fontWeight: 600, color: '#0f172a' }}>
+                Recent Appointments
+              </h2>
+              <Link to="/appointments" style={{
+                fontSize: 13, color: '#0ea5e9',
+                textDecoration: 'none', fontWeight: 500
+              }}>
                 View all →
               </Link>
             </div>
+
             {loading ? (
-              <p style={{ color: '#94a3b8', fontSize: 14 }}>Loading...</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={{
+                    height: 48, background: '#f1f5f9', borderRadius: 8,
+                    animation: 'pulse 1.5s ease-in-out infinite'
+                  }} />
+                ))}
+              </div>
             ) : recentAppointments.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px 0', color: '#94a3b8' }}>
                 <div style={{ fontSize: 40, marginBottom: 10 }}>📭</div>
@@ -95,7 +173,8 @@ export default function Dashboard() {
             ) : (
               recentAppointments.map(appt => (
                 <div key={appt.id} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  display: 'flex', alignItems: 'center',
+                  justifyContent: 'space-between',
                   padding: '12px 0', borderBottom: '1px solid #f1f5f9'
                 }}>
                   <div>
@@ -115,28 +194,50 @@ export default function Dashboard() {
           </div>
 
           {/* Quick actions */}
-          <div style={{ background: 'white', borderRadius: 14, padding: 24, boxShadow: '0 4px 12px rgba(0,0,0,0.07)' }}>
-            <h2 style={{ fontSize: 17, fontWeight: 600, color: '#0f172a', marginBottom: 16 }}>Quick Actions</h2>
+          <div style={{
+            background: 'white', borderRadius: 14, padding: 24,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.07)'
+          }}>
+            <h2 style={{ fontSize: 17, fontWeight: 600, color: '#0f172a', marginBottom: 16 }}>
+              Quick Actions
+            </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {user?.role === 'patient' ? (
                 <>
                   <ActionBtn to="/doctors" emoji="🔍" label="Find a Doctor" color="#0ea5e9" />
                   <ActionBtn to="/appointments" emoji="📋" label="View Appointments" color="#10b981" />
+                  <ActionBtn to="/medical-history" emoji="📋" label="Medical History" color="#8b5cf6" />
                 </>
               ) : (
-                <>
-                  <ActionBtn to="/appointments" emoji="📋" label="View Appointments" color="#0ea5e9" />
-                </>
+                <ActionBtn to="/appointments" emoji="📋" label="View Appointments" color="#0ea5e9" />
               )}
             </div>
 
+            {/* Pending alert for doctor */}
+            {user?.role === 'doctor' && counts.pending > 0 && (
+              <div style={{
+                marginTop: 16, padding: 14,
+                background: '#fef3c7', borderRadius: 10,
+                border: '1px solid #fde68a'
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: '#92400e', marginBottom: 4 }}>
+                  ⏳ {counts.pending} pending request{counts.pending > 1 ? 's' : ''}
+                </div>
+                <div style={{ fontSize: 12, color: '#78350f' }}>
+                  Patients are waiting for your response.
+                </div>
+              </div>
+            )}
+
             {/* Health tip */}
             <div style={{
-              marginTop: 24, padding: 16, background: '#f0fdf4',
+              marginTop: 16, padding: 16, background: '#f0fdf4',
               borderRadius: 10, border: '1px solid #bbf7d0'
             }}>
               <div style={{ fontSize: 20, marginBottom: 6 }}>💡</div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: '#166534', marginBottom: 4 }}>Health Tip</div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: '#166534', marginBottom: 4 }}>
+                Health Tip
+              </div>
               <div style={{ fontSize: 12, color: '#15803d', lineHeight: 1.6 }}>
                 Drink at least 8 glasses of water daily to stay hydrated and maintain good health.
               </div>
@@ -144,22 +245,31 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+      `}</style>
     </div>
   );
 }
 
 function StatusBadge({ status }) {
   const colors = {
-    pending: { bg: '#fef3c7', color: '#92400e' },
-    accepted: { bg: '#d1fae5', color: '#065f46' },
-    rejected: { bg: '#fee2e2', color: '#991b1b' },
+    pending:   { bg: '#fef3c7', color: '#92400e' },
+    accepted:  { bg: '#d1fae5', color: '#065f46' },
+    rejected:  { bg: '#fee2e2', color: '#991b1b' },
     completed: { bg: '#dbeafe', color: '#1e40af' },
   };
   const c = colors[status] || colors.pending;
   return (
     <span style={{
-      padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 500,
-      background: c.bg, color: c.color, textTransform: 'capitalize'
+      padding: '4px 12px', borderRadius: 20, fontSize: 11,
+      fontWeight: 500, background: c.bg, color: c.color,
+      textTransform: 'capitalize'
     }}>{status}</span>
   );
 }

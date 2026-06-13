@@ -22,6 +22,7 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 class DoctorListView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+    
     def get_queryset(self):
         qs = User.objects.filter(role='doctor').select_related('doctor_profile')
         spec = self.request.query_params.get('specialization')
